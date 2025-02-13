@@ -1,0 +1,23 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  merch-service:
+    container_name: merch-service
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "${APP_HTTP_PORT}:${APP_HTTP_PORT}"
+    depends_on:
+      - postgres
+
+volumes:
+  pg_data:

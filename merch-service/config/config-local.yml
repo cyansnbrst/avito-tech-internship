@@ -1,0 +1,13 @@
+app:
+  http_port: 8080  
+  env: development
+  idle_timeout: 1m
+  read_timeout: 10s
+  write_timeout: 30s
+  shutdown_timeout: 5s
+  jwt_token_ttl: 24h
+
+postgres:                     
+  max_pool_size: 20
+  conn_timeout: 3s
+  driver: pgx
