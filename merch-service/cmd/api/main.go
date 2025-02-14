@@ -41,6 +41,6 @@ func main() {
 	// Start the server
 	s := server.NewServer(cfg, logger, psqlDB)
 	if err = s.Run(); err != nil {
-		logger.Fatal("an error occured", zap.String("error", err.Error()))
+		logger.Fatal("an error occurred", zap.String("error", err.Error()))
 	}
 }

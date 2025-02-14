@@ -34,7 +34,7 @@ type PostgreSQL struct {
 	Password    string        `env:"POSTGRES_PASSWORD" env-required:"true"`
 	DBName      string        `env:"POSTGRES_DB" env-required:"true"`
 	SSLMode     string        `env:"POSTGRES_SSLMODE" env-required:"true"`
-	MaxPoolSize int64         `yaml:"max_pool_size" env:"POSTGRES_MAX_POOL_SIZE" env-required:"true"`
+	MaxPoolSize int32         `yaml:"max_pool_size" env:"POSTGRES_MAX_POOL_SIZE" env-required:"true"`
 	ConnTimeout time.Duration `yaml:"conn_timeout" env:"POSTGRES_CONN_TIMEOUT" env-required:"true"`
 	Driver      string        `yaml:"driver" env:"POSTGRES_DRIVER" env-required:"true"`
 }

@@ -39,31 +39,39 @@ func (u *authUC) LoginOrRegister(ctx context.Context, username, password string)
 	}
 
 	if user == nil {
-		hashedPassword, err := argon2id.CreateHash(password, argon2id.DefaultParams)
-		if err != nil {
-			return "", err
-		}
-
-		user, err = u.authRepo.CreateUser(ctx, username, string(hashedPassword))
+		user, err = u.createUser(ctx, username, password)
 		if err != nil {
 			return "", err
 		}
 	} else {
-		match, err := argon2id.ComparePasswordAndHash(password, user.PasswordHash)
-		if err != nil {
+		if err := u.validatePassword(user, password); err != nil {
 			return "", err
 		}
-		if !match {
-			return "", ErrIncorrectPassword
-		}
 	}
 
-	token, err := u.GenerateJWT(user)
+	return u.GenerateJWT(user)
+}
+
+// Create a new user
+func (u *authUC) createUser(ctx context.Context, username, password string) (*models.User, error) {
+	hashedPassword, err := argon2id.CreateHash(password, argon2id.DefaultParams)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return token, nil
+	return u.authRepo.CreateUser(ctx, username, hashedPassword)
+}
+
+// Validate password
+func (u *authUC) validatePassword(user *models.User, password string) error {
+	match, err := argon2id.ComparePasswordAndHash(password, user.PasswordHash)
+	if err != nil {
+		return err
+	}
+	if !match {
+		return ErrIncorrectPassword
+	}
+	return nil
 }
 
 // Generate JWT token

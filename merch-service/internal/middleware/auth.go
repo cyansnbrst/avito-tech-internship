@@ -12,7 +12,7 @@ import (
 )
 
 // Authentication middleware
-func (mw *MiddlewareManager) Authenticate(next echo.HandlerFunc) echo.HandlerFunc {
+func (mw *Manager) Authenticate(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		authHeader := c.Request().Header.Get(echo.HeaderAuthorization)
 		if authHeader == "" {
@@ -24,7 +24,7 @@ func (mw *MiddlewareManager) Authenticate(next echo.HandlerFunc) echo.HandlerFun
 			return hh.InvalidAuthenticationTokenResponse(c)
 		}
 
-		userID, err := jwt.ParseJWT(token, string(mw.cfg.App.JWTSecretKey))
+		userID, err := jwt.ParseJWT(token, mw.cfg.App.JWTSecretKey)
 		if err != nil {
 			if errors.Is(err, auth.ErrInvalidToken) {
 				return hh.InvalidAuthenticationTokenResponse(c)

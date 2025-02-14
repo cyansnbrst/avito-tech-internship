@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	_ "github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"cyansnbrst/merch-service/config"
@@ -27,7 +26,7 @@ func OpenDB(cfg *config.Config) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("failed to parse pool config: %w", err)
 	}
 
-	config.MaxConns = int32(cfg.PostgreSQL.MaxPoolSize)
+	config.MaxConns = cfg.PostgreSQL.MaxPoolSize
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {

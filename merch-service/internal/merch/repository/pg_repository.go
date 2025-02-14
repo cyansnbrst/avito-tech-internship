@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -202,7 +203,13 @@ func (r *merchRepo) execTx(ctx context.Context, fn func(tx pgx.Tx) error) error 
 	if err != nil {
 		return fmt.Errorf("repo - failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			if err != pgx.ErrTxClosed {
+				log.Printf("repo - failed to rollback transaction: %v", err)
+			}
+		}
+	}()
 
 	if err := fn(tx); err != nil {
 		return err
@@ -216,7 +223,7 @@ func (r *merchRepo) execTx(ctx context.Context, fn func(tx pgx.Tx) error) error 
 }
 
 // Update user's balance
-func (r *merchRepo) updateBalance(ctx context.Context, tx pgx.Tx, userID int64, amount int64) error {
+func (r *merchRepo) updateBalance(ctx context.Context, tx pgx.Tx, userID, amount int64) error {
 	query := `
 		UPDATE users
 		SET balance = balance + $1
@@ -230,7 +237,7 @@ func (r *merchRepo) updateBalance(ctx context.Context, tx pgx.Tx, userID int64, 
 }
 
 // Record coin transaction
-func (r *merchRepo) recordTransaction(ctx context.Context, tx pgx.Tx, fromUser, toUser int64, amount int64) error {
+func (r *merchRepo) recordTransaction(ctx context.Context, tx pgx.Tx, fromUser, toUser, amount int64) error {
 	query := `
 		INSERT INTO transactions (from_id, to_id, amount)
 		VALUES ($1, $2, $3)

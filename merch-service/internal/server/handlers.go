@@ -30,15 +30,15 @@ func (s *Server) RegisterHandlers() *echo.Echo {
 	authHandlers := authHTTP.NewAuthHandlers(authUC, s.logger)
 	merchHandlers := merchHTTP.NewMerchHandlers(merchUC, s.logger)
 
-	mw := mm.NewMiddlewareManager(s.config, s.logger)
+	mw := mm.NewManager(s.config, s.logger)
 
 	api := e.Group("/api")
-	protectedApi := api.Group("")
+	protectedAPI := api.Group("")
 
-	protectedApi.Use(mw.Authenticate)
+	protectedAPI.Use(mw.Authenticate)
 
 	authHTTP.RegisterAuthRoutes(api, authHandlers)
-	merchHTTP.RegisterMerchRoutes(protectedApi, merchHandlers)
+	merchHTTP.RegisterMerchRoutes(protectedAPI, merchHandlers)
 
 	return e
 }

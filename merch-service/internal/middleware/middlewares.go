@@ -7,14 +7,14 @@ import (
 )
 
 // Middleware manager struct
-type MiddlewareManager struct {
+type Manager struct {
 	cfg    *config.Config
 	logger *zap.Logger
 }
 
 // Middleware manager constructor
-func NewMiddlewareManager(cfg *config.Config, logger *zap.Logger) *MiddlewareManager {
-	return &MiddlewareManager{
+func NewManager(cfg *config.Config, logger *zap.Logger) *Manager {
+	return &Manager{
 		cfg:    cfg,
 		logger: logger,
 	}

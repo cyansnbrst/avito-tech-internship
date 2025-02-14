@@ -83,9 +83,9 @@ gen:
 ## coverage: check tests coverage
 .PHONY: coverage
 coverage:
-	go test -coverprofile=coverage.out ./...
-	go tool cover -func=coverage.out
-	go tool cover -html=coverage.out
+	go test -coverprofile=./docs/coverage.out ./...
+	go tool cover -func=./docs/coverage.out
+	go tool cover -html=./docs/coverage.out
 
 ## audit: tidy dependencies and format, vet and test all code
 .PHONY: audit
