@@ -23,9 +23,10 @@ func (s *Server) RegisterHandlers() *echo.Echo {
 
 	authRepo := authRepository.NewAuthRepo(s.db)
 	merchRepo := merchRepository.NewMerchRepo(s.db)
+	merchRedisRepo := merchRepository.NewMerchRedisRepo(s.config, s.redisClient)
 
 	authUC := authUseCase.NewAuthUseCase(s.config, authRepo)
-	merchUC := merchUseCase.NewMerchUseCase(merchRepo)
+	merchUC := merchUseCase.NewMerchUseCase(merchRepo, merchRedisRepo)
 
 	authHandlers := authHTTP.NewAuthHandlers(authUC, s.logger)
 	merchHandlers := merchHTTP.NewMerchHandlers(merchUC, s.logger)

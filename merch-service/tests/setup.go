@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -23,10 +24,12 @@ import (
 
 type BaseTestSuite struct {
 	suite.Suite
-	pool      *dockertest.Pool
-	container *dockertest.Resource
-	dbPool    *pgxpool.Pool
-	cfg       *config.Config
+	pool           *dockertest.Pool
+	container      *dockertest.Resource
+	redisContainer *dockertest.Resource
+	dbPool         *pgxpool.Pool
+	redisClient    *redis.Client
+	cfg            *config.Config
 }
 
 func (s *BaseTestSuite) SetupSuite() {
@@ -39,6 +42,7 @@ func (s *BaseTestSuite) SetupSuite() {
 	pool.MaxWait = 120 * time.Second
 	s.pool = pool
 
+	// Запуск PostgreSQL-контейнера
 	container, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "postgres",
 		Tag:        "15-alpine3.18",
@@ -73,6 +77,29 @@ func (s *BaseTestSuite) SetupSuite() {
 
 	s.runMigrations(dbDSN)
 
+	redisContainer, err := pool.RunWithOptions(&dockertest.RunOptions{
+		Repository: "redis",
+		Tag:        "7-alpine",
+	}, func(config *docker.HostConfig) {
+		config.AutoRemove = true
+		config.RestartPolicy = docker.RestartPolicy{Name: "no"}
+	})
+	s.Require().NoError(err)
+
+	redisContainer.Expire(120)
+	s.redisContainer = redisContainer
+
+	redisHostAndPort := redisContainer.GetHostPort("6379/tcp")
+	s.redisClient = redis.NewClient(&redis.Options{
+		Addr: redisHostAndPort,
+	})
+
+	err = pool.Retry(func() error {
+		ctx := context.Background()
+		return s.redisClient.Ping(ctx).Err()
+	})
+	s.Require().NoError(err)
+
 	envPath := filepath.ToSlash(filepath.Join("..", ".env"))
 	err = godotenv.Load(envPath)
 	s.Require().NoError(err)
@@ -105,10 +132,22 @@ func (s *BaseTestSuite) TearDownSuite() {
 	if s.dbPool != nil {
 		s.dbPool.Close()
 	}
+
+	if s.redisClient != nil {
+		s.redisClient.Close()
+	}
+
 	if s.container != nil {
 		err := s.pool.Purge(s.container)
 		if err != nil {
-			log.Printf("failed to purge container: %v", err)
+			log.Printf("failed to purge PostgreSQL container: %v", err)
+		}
+	}
+
+	if s.redisContainer != nil {
+		err := s.pool.Purge(s.redisContainer)
+		if err != nil {
+			log.Printf("failed to purge Redis container: %v", err)
 		}
 	}
 }

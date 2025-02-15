@@ -8,18 +8,17 @@ import (
 	"cyansnbrst/merch-service/config"
 	"cyansnbrst/merch-service/internal/server"
 	"cyansnbrst/merch-service/pkg/db/postgres"
+	"cyansnbrst/merch-service/pkg/db/redis"
 )
 
 func main() {
 	log.Println("starting merch-service server")
 
-	// Load configuration
 	cfg, err := config.LoadConfig("config/config-local.yml")
 	if err != nil {
 		log.Fatalf("loadConfig: %v", err)
 	}
 
-	// Set up logger
 	logger, err := zap.NewProduction()
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
@@ -30,7 +29,6 @@ func main() {
 		}
 	}()
 
-	// Connect to database
 	psqlDB, err := postgres.OpenDB(cfg)
 	if err != nil {
 		logger.Fatal("failed to init storage", zap.String("error", err.Error()))
@@ -38,8 +36,15 @@ func main() {
 	defer psqlDB.Close()
 	logger.Info("database connected")
 
-	// Start the server
-	s := server.NewServer(cfg, logger, psqlDB)
+	redisClient := redis.NewRedisClient(cfg)
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			logger.Warn("failed to close redis", zap.String("error", err.Error()))
+		}
+	}()
+	logger.Info("redis connected")
+
+	s := server.NewServer(cfg, logger, psqlDB, redisClient)
 	if err = s.Run(); err != nil {
 		logger.Fatal("an error occurred", zap.String("error", err.Error()))
 	}

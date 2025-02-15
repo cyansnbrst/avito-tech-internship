@@ -12,6 +12,7 @@ import (
 	"cyansnbrst/merch-service/internal/merch/usecase"
 	m "cyansnbrst/merch-service/internal/models"
 	"cyansnbrst/merch-service/pkg/db"
+	"cyansnbrst/merch-service/pkg/db/redis"
 )
 
 var ErrRandomDBError = errors.New("db error")
@@ -21,8 +22,9 @@ func TestMerchUC_GetInfo(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockRepo := mock_merch.NewMockRepository(ctrl)
+	mockRedisRepo := mock_merch.NewMockRedisRepository(ctrl)
 
-	merchUC := usecase.NewMerchUseCase(mockRepo)
+	merchUC := usecase.NewMerchUseCase(mockRepo, mockRedisRepo)
 
 	tests := []struct {
 		name          string
@@ -32,9 +34,10 @@ func TestMerchUC_GetInfo(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name:   "success",
+			name:   "success data from DB",
 			userID: 1,
 			mockSetup: func() {
+				mockRedisRepo.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(nil, nil)
 				mockRepo.EXPECT().GetCoinsAndInventory(gomock.Any(), int64(1)).Return(&m.CoinsInventory{
 					Coins: 100,
 					Inventory: []m.InventoryItem{
@@ -56,6 +59,7 @@ func TestMerchUC_GetInfo(t *testing.T) {
 						{ToUser: "user2", Amount: 100},
 					},
 				}, nil)
+				mockRedisRepo.EXPECT().SetInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expectedResp: &m.InfoResponse{
 				CoinsInventory: m.CoinsInventory{
@@ -83,23 +87,97 @@ func TestMerchUC_GetInfo(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			name:   "error in get coins and inventory",
+			name:   "success data from redis",
 			userID: 2,
 			mockSetup: func() {
-				mockRepo.EXPECT().GetCoinsAndInventory(gomock.Any(), int64(2)).Return(nil, ErrRandomDBError)
+				mockRedisRepo.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(&m.InfoResponse{
+					CoinsInventory: m.CoinsInventory{
+						Coins: 200,
+						Inventory: []m.InventoryItem{
+							{
+								Type:     "t-shirt",
+								Quantity: 3,
+							},
+						},
+					},
+					CoinHistory: &m.TransactionHistory{
+						Received: []m.ReceiveTransaction{
+							{FromUser: "user3", Amount: 75},
+						},
+						Sent: []m.SendTransaction{
+							{ToUser: "user4", Amount: 50},
+						},
+					},
+				}, nil)
+			},
+			expectedResp: &m.InfoResponse{
+				CoinsInventory: m.CoinsInventory{
+					Coins: 200,
+					Inventory: []m.InventoryItem{
+						{
+							Type:     "t-shirt",
+							Quantity: 3,
+						},
+					},
+				},
+				CoinHistory: &m.TransactionHistory{
+					Received: []m.ReceiveTransaction{
+						{FromUser: "user3", Amount: 75},
+					},
+					Sent: []m.SendTransaction{
+						{ToUser: "user4", Amount: 50},
+					},
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name:   "error redis error",
+			userID: 3,
+			mockSetup: func() {
+				mockRedisRepo.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(nil, ErrRandomDBError)
 			},
 			expectedResp:  nil,
 			expectedError: ErrRandomDBError,
 		},
 		{
-			name:   "error in get transaction history",
-			userID: 3,
+			name:   "error db error in GetCoinsAndInventory",
+			userID: 4,
 			mockSetup: func() {
-				mockRepo.EXPECT().GetCoinsAndInventory(gomock.Any(), int64(3)).Return(&m.CoinsInventory{
-					Coins:     200,
+				mockRedisRepo.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(nil, nil)
+				mockRepo.EXPECT().GetCoinsAndInventory(gomock.Any(), int64(4)).Return(nil, ErrRandomDBError)
+			},
+			expectedResp:  nil,
+			expectedError: ErrRandomDBError,
+		},
+		{
+			name:   "error db error in GetTransactionHistory",
+			userID: 5,
+			mockSetup: func() {
+				mockRedisRepo.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(nil, nil)
+				mockRepo.EXPECT().GetCoinsAndInventory(gomock.Any(), int64(5)).Return(&m.CoinsInventory{
+					Coins:     300,
 					Inventory: []m.InventoryItem{},
 				}, nil)
-				mockRepo.EXPECT().GetTransactionHistory(gomock.Any(), int64(3)).Return(nil, ErrRandomDBError)
+				mockRepo.EXPECT().GetTransactionHistory(gomock.Any(), int64(5)).Return(nil, ErrRandomDBError)
+			},
+			expectedResp:  nil,
+			expectedError: ErrRandomDBError,
+		},
+		{
+			name:   "error redis SetInfo error",
+			userID: 6,
+			mockSetup: func() {
+				mockRedisRepo.EXPECT().GetInfo(gomock.Any(), gomock.Any()).Return(nil, nil)
+				mockRepo.EXPECT().GetCoinsAndInventory(gomock.Any(), int64(6)).Return(&m.CoinsInventory{
+					Coins:     400,
+					Inventory: []m.InventoryItem{},
+				}, nil)
+				mockRepo.EXPECT().GetTransactionHistory(gomock.Any(), int64(6)).Return(&m.TransactionHistory{
+					Received: []m.ReceiveTransaction{},
+					Sent:     []m.SendTransaction{},
+				}, nil)
+				mockRedisRepo.EXPECT().SetInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrRandomDBError)
 			},
 			expectedResp:  nil,
 			expectedError: ErrRandomDBError,
@@ -118,13 +196,14 @@ func TestMerchUC_GetInfo(t *testing.T) {
 	}
 }
 
-func TestSendCoins(t *testing.T) {
+func TestMerchUC_SendCoins(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockRepo := mock_merch.NewMockRepository(ctrl)
+	mockRedisRepo := mock_merch.NewMockRedisRepository(ctrl)
 
-	merchUC := usecase.NewMerchUseCase(mockRepo)
+	merchUC := usecase.NewMerchUseCase(mockRepo, mockRedisRepo)
 
 	tests := []struct {
 		name          string
@@ -141,6 +220,9 @@ func TestSendCoins(t *testing.T) {
 			amount:     50,
 			mockSetup: func() {
 				mockRepo.EXPECT().SendCoins(gomock.Any(), int64(1), "user1", int64(50)).Return(nil)
+				mockRedisRepo.EXPECT().DeleteInfo(gomock.Any(), redis.GetUserInfoCacheKey(int64(1))).Return(nil)
+				mockRepo.EXPECT().GetUserIDByUsername(gomock.Any(), "user1").Return(int64(2), nil)
+				mockRedisRepo.EXPECT().DeleteInfo(gomock.Any(), redis.GetUserInfoCacheKey(int64(2))).Return(nil)
 			},
 			expectedError: nil,
 		},
@@ -153,6 +235,42 @@ func TestSendCoins(t *testing.T) {
 				mockRepo.EXPECT().SendCoins(gomock.Any(), int64(1), "user2", int64(200)).Return(db.ErrInsufficientFunds)
 			},
 			expectedError: db.ErrInsufficientFunds,
+		},
+		{
+			name:       "error delete cache for sender",
+			fromUserID: 1,
+			toUser:     "user3",
+			amount:     50,
+			mockSetup: func() {
+				mockRepo.EXPECT().SendCoins(gomock.Any(), int64(1), "user3", int64(50)).Return(nil)
+				mockRedisRepo.EXPECT().DeleteInfo(gomock.Any(), redis.GetUserInfoCacheKey(int64(1))).Return(ErrRandomDBError)
+			},
+			expectedError: ErrRandomDBError,
+		},
+		{
+			name:       "error delete cache for receiver",
+			fromUserID: 1,
+			toUser:     "user4",
+			amount:     50,
+			mockSetup: func() {
+				mockRepo.EXPECT().SendCoins(gomock.Any(), int64(1), "user4", int64(50)).Return(nil)
+				mockRedisRepo.EXPECT().DeleteInfo(gomock.Any(), redis.GetUserInfoCacheKey(int64(1))).Return(nil)
+				mockRepo.EXPECT().GetUserIDByUsername(gomock.Any(), "user4").Return(int64(3), nil)
+				mockRedisRepo.EXPECT().DeleteInfo(gomock.Any(), redis.GetUserInfoCacheKey(int64(3))).Return(ErrRandomDBError)
+			},
+			expectedError: ErrRandomDBError,
+		},
+		{
+			name:       "error get user ID by username",
+			fromUserID: 1,
+			toUser:     "user5",
+			amount:     50,
+			mockSetup: func() {
+				mockRepo.EXPECT().SendCoins(gomock.Any(), int64(1), "user5", int64(50)).Return(nil)
+				mockRedisRepo.EXPECT().DeleteInfo(gomock.Any(), redis.GetUserInfoCacheKey(int64(1))).Return(nil)
+				mockRepo.EXPECT().GetUserIDByUsername(gomock.Any(), "user5").Return(int64(0), ErrRandomDBError)
+			},
+			expectedError: ErrRandomDBError,
 		},
 	}
 
@@ -167,13 +285,14 @@ func TestSendCoins(t *testing.T) {
 	}
 }
 
-func TestBuyItem(t *testing.T) {
+func TestMerchUC_BuyItem(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockRepo := mock_merch.NewMockRepository(ctrl)
+	mockRedisRepo := mock_merch.NewMockRedisRepository(ctrl)
 
-	merchUC := usecase.NewMerchUseCase(mockRepo)
+	merchUC := usecase.NewMerchUseCase(mockRepo, mockRedisRepo)
 
 	tests := []struct {
 		name          string
@@ -188,6 +307,7 @@ func TestBuyItem(t *testing.T) {
 			item:   "item1",
 			mockSetup: func() {
 				mockRepo.EXPECT().BuyItem(gomock.Any(), int64(1), "item1").Return(nil)
+				mockRedisRepo.EXPECT().DeleteInfo(gomock.Any(), redis.GetUserInfoCacheKey(int64(1))).Return(nil)
 			},
 			expectedError: nil,
 		},
@@ -199,6 +319,16 @@ func TestBuyItem(t *testing.T) {
 				mockRepo.EXPECT().BuyItem(gomock.Any(), int64(1), "item1").Return(db.ErrItemtNotFound)
 			},
 			expectedError: db.ErrItemtNotFound,
+		},
+		{
+			name:   "error delete cache",
+			userID: 1,
+			item:   "item1",
+			mockSetup: func() {
+				mockRepo.EXPECT().BuyItem(gomock.Any(), int64(1), "item1").Return(nil)
+				mockRedisRepo.EXPECT().DeleteInfo(gomock.Any(), redis.GetUserInfoCacheKey(int64(1))).Return(ErrRandomDBError)
+			},
+			expectedError: ErrRandomDBError,
 		},
 	}
 

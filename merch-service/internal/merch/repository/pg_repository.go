@@ -248,3 +248,19 @@ func (r *merchRepo) recordTransaction(ctx context.Context, tx pgx.Tx, fromUser, 
 	}
 	return nil
 }
+
+// Get user ID by username
+func (r *merchRepo) GetUserIDByUsername(ctx context.Context, username string) (int64, error) {
+	var userID int64
+
+	query := `SELECT id FROM users WHERE username = $1`
+	err := r.db.QueryRow(ctx, query, username).Scan(&userID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return 0, db.ErrUserNotFound
+		}
+		return 0, fmt.Errorf("repo - failed to get user id: %w", err)
+	}
+
+	return userID, nil
+}

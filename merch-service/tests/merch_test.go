@@ -45,7 +45,7 @@ func (s *MerchTestSuite) TearDownSuite() {
 }
 
 func (s *MerchTestSuite) TestMerch_BuyItem_Success() {
-	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool)
+	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool, s.redisClient)
 	ts := httptest.NewServer(app.RegisterHandlers())
 	defer ts.Close()
 
@@ -99,7 +99,7 @@ func (s *MerchTestSuite) TestMerch_BuyItem_Success() {
 }
 
 func (s *MerchTestSuite) TestMerch_BuyItem_InsufficientFunds() {
-	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool)
+	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool, s.redisClient)
 	ts := httptest.NewServer(app.RegisterHandlers())
 	defer ts.Close()
 
@@ -148,7 +148,7 @@ func (s *MerchTestSuite) TestMerch_BuyItem_InsufficientFunds() {
 }
 
 func (s *MerchTestSuite) TestMerch_BuyItem_ItemNotFound() {
-	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool)
+	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool, s.redisClient)
 	ts := httptest.NewServer(app.RegisterHandlers())
 	defer ts.Close()
 
@@ -197,7 +197,7 @@ func (s *MerchTestSuite) TestMerch_BuyItem_ItemNotFound() {
 }
 
 func (s *MerchTestSuite) TestMerch_Unauthorized() {
-	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool)
+	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool, s.redisClient)
 	ts := httptest.NewServer(app.RegisterHandlers())
 	defer ts.Close()
 
@@ -219,7 +219,7 @@ func (s *MerchTestSuite) TestMerch_Unauthorized() {
 }
 
 func (s *MerchTestSuite) TestMerch_SendCoins_Success() {
-	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool)
+	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool, s.redisClient)
 	ts := httptest.NewServer(app.RegisterHandlers())
 	defer ts.Close()
 
@@ -302,7 +302,7 @@ func (s *MerchTestSuite) TestMerch_SendCoins_Success() {
 }
 
 func (s *MerchTestSuite) TestMerch_SendCoins_UserNotFound() {
-	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool)
+	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool, s.redisClient)
 	ts := httptest.NewServer(app.RegisterHandlers())
 	defer ts.Close()
 
@@ -344,7 +344,7 @@ func (s *MerchTestSuite) TestMerch_SendCoins_UserNotFound() {
 }
 
 func (s *MerchTestSuite) TestMerch_SendCoins_InsufficientFunds() {
-	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool)
+	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool, s.redisClient)
 	ts := httptest.NewServer(app.RegisterHandlers())
 	defer ts.Close()
 
@@ -400,7 +400,7 @@ func (s *MerchTestSuite) TestMerch_SendCoins_InsufficientFunds() {
 }
 
 func (s *MerchTestSuite) TestMerch_SendCoins_InvalidJSON() {
-	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool)
+	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool, s.redisClient)
 	ts := httptest.NewServer(app.RegisterHandlers())
 	defer ts.Close()
 
@@ -422,7 +422,7 @@ func (s *MerchTestSuite) TestMerch_SendCoins_InvalidJSON() {
 }
 
 func (s *MerchTestSuite) TestMerch_SendCoins_NegativeAmount() {
-	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool)
+	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool, s.redisClient)
 	ts := httptest.NewServer(app.RegisterHandlers())
 	defer ts.Close()
 
@@ -478,7 +478,7 @@ func (s *MerchTestSuite) TestMerch_SendCoins_NegativeAmount() {
 }
 
 func (s *MerchTestSuite) TestMerch_SendCoins_SelfTransfer() {
-	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool)
+	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool, s.redisClient)
 	ts := httptest.NewServer(app.RegisterHandlers())
 	defer ts.Close()
 
@@ -520,7 +520,7 @@ func (s *MerchTestSuite) TestMerch_SendCoins_SelfTransfer() {
 }
 
 func (s *MerchTestSuite) TestMerch_GetInfo_Success() {
-	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool)
+	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool, s.redisClient)
 	ts := httptest.NewServer(app.RegisterHandlers())
 	defer ts.Close()
 

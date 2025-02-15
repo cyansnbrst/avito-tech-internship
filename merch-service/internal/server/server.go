@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 
@@ -17,17 +18,19 @@ import (
 
 // Server struct
 type Server struct {
-	config *config.Config
-	logger *zap.Logger
-	db     *pgxpool.Pool
+	config      *config.Config
+	logger      *zap.Logger
+	db          *pgxpool.Pool
+	redisClient *redis.Client
 }
 
 // New server constructor
-func NewServer(cfg *config.Config, logger *zap.Logger, db *pgxpool.Pool) *Server {
+func NewServer(cfg *config.Config, logger *zap.Logger, db *pgxpool.Pool, redisClient *redis.Client) *Server {
 	return &Server{
-		config: cfg,
-		logger: logger,
-		db:     db,
+		config:      cfg,
+		logger:      logger,
+		db:          db,
+		redisClient: redisClient,
 	}
 }
 

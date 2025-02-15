@@ -12,6 +12,7 @@ import (
 type Config struct {
 	App        App        `yaml:"app"`
 	PostgreSQL PostgreSQL `yaml:"postgres"`
+	Redis      Redis      `yaml:"redis"`
 }
 
 // App config struct
@@ -37,6 +38,16 @@ type PostgreSQL struct {
 	MaxPoolSize int32         `yaml:"max_pool_size" env:"POSTGRES_MAX_POOL_SIZE" env-required:"true"`
 	ConnTimeout time.Duration `yaml:"conn_timeout" env:"POSTGRES_CONN_TIMEOUT" env-required:"true"`
 	Driver      string        `yaml:"driver" env:"POSTGRES_DRIVER" env-required:"true"`
+}
+
+// Redis config struct
+type Redis struct {
+	Addr         string        `env:"REDIS_ADDR" env-required:"true"`
+	DB           int           `env:"REDIS_DB" env-required:"true"`
+	MinIdleConns int           `yaml:"min_idle_conns" env:"REDIS_MIN_IDLE_CONNS" env-required:"true"`
+	PoolSize     int           `yaml:"pool_size" env:"REDIS_POOL_SIZE" env-required:"true"`
+	PoolTimeout  time.Duration `yaml:"pool_timeout" env:"REDIS_POOL_TIMEOUT" env-required:"true"`
+	CacheTTL     time.Duration `yaml:"cache_ttl" env:"REDIS_CACHE_TTL" env-required:"true"`
 }
 
 // Load config file from given path and env variables

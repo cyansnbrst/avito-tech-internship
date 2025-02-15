@@ -11,3 +11,9 @@ postgres:
   max_pool_size: 50
   conn_timeout: 10s
   driver: pgx
+
+redis:
+  min_idle_conns: 200
+  pool_size: 12000
+  pool_timeout: 4m
+  cache_ttl: 24h

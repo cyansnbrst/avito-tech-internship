@@ -79,6 +79,21 @@ func (mr *MockRepositoryMockRecorder) GetTransactionHistory(ctx, userID interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTransactionHistory", reflect.TypeOf((*MockRepository)(nil).GetTransactionHistory), ctx, userID)
 }
 
+// GetUserIDByUsername mocks base method.
+func (m *MockRepository) GetUserIDByUsername(ctx context.Context, username string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserIDByUsername", ctx, username)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserIDByUsername indicates an expected call of GetUserIDByUsername.
+func (mr *MockRepositoryMockRecorder) GetUserIDByUsername(ctx, username interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserIDByUsername", reflect.TypeOf((*MockRepository)(nil).GetUserIDByUsername), ctx, username)
+}
+
 // SendCoins mocks base method.
 func (m *MockRepository) SendCoins(ctx context.Context, fromUser int64, toUser string, amount int64) error {
 	m.ctrl.T.Helper()

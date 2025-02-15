@@ -37,7 +37,7 @@ func (s *AuthTestSuite) TearDownSuite() {
 }
 
 func (s *AuthTestSuite) TestAuth_Authenticate_Login() {
-	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool)
+	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool, s.redisClient)
 	ts := httptest.NewServer(app.RegisterHandlers())
 	defer ts.Close()
 
@@ -73,7 +73,7 @@ func (s *AuthTestSuite) TestAuth_Authenticate_Login() {
 }
 
 func (s *AuthTestSuite) TestAuth_Authenticate_InvalidPassword() {
-	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool)
+	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool, s.redisClient)
 	ts := httptest.NewServer(app.RegisterHandlers())
 	defer ts.Close()
 
@@ -109,7 +109,7 @@ func (s *AuthTestSuite) TestAuth_Authenticate_InvalidPassword() {
 }
 
 func (s *AuthTestSuite) TestAuth_Authenticate_Register() {
-	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool)
+	app := server.NewServer(s.cfg, zap.NewNop(), s.dbPool, s.redisClient)
 	ts := httptest.NewServer(app.RegisterHandlers())
 	defer ts.Close()
 

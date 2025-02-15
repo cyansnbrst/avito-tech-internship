@@ -78,6 +78,7 @@ migrate/new:
 .PHONY: gen 
 gen: 
 	mockgen -source=internal/merch/pg_repository.go -destination=internal/merch/mock/pg_repository_mock.go
+	mockgen -source=internal/merch/redis_repository.go -destination=internal/merch/mock/redis_repository_mock.go
 	mockgen -source=internal/auth/pg_repository.go -destination=internal/auth/mock/pg_repository_mock.go
 
 ## coverage: check tests coverage
@@ -94,13 +95,8 @@ audit:
 	go mod tidy
 	go mod verify
 
-	@echo 'Formatting code...'
-	go fmt ./...
-	swag fmt ./...
-
-	@echo 'Vetting code...'
-	go vet ./...
-	staticcheck ./...
-
+	@echo 'Running linter...'
+	golangci-lint run --config .golangci.yml
+	
 	@echo 'Running tests...'
 	go test -race -vet=off ./...
