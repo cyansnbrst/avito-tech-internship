@@ -42,7 +42,6 @@ func (s *BaseTestSuite) SetupSuite() {
 	pool.MaxWait = 120 * time.Second
 	s.pool = pool
 
-	// Запуск PostgreSQL-контейнера
 	container, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "postgres",
 		Tag:        "15-alpine3.18",
