@@ -27,7 +27,17 @@ func NewAuthHandlers(authUC auth.UseCase, logger *zap.Logger) auth.Handlers {
 	}
 }
 
-// Authenticate user
+// @Summary		Register or login a user
+// @Description	Creates a new user if username doesn't exist or login if password matches.
+// @Tags		auth
+// @Accept		json
+// @Produce		json
+// @Param input body models.AuthRequest true "input"
+// @Success		200	{object}	models.AuthResponse			"successful"
+// @Failure		400	{object}	httphelpers.ErrorResponse	"bad request"
+// @Failure		401	{object}	httphelpers.ErrorResponse	"invalid credentials"
+// @Failure		500	{object}	httphelpers.ErrorResponse	"internal server error"
+// @Router		/auth [post]
 func (h *authHandlers) Authenticate(c echo.Context) error {
 	var input m.AuthRequest
 	if err := c.Bind(&input); err != nil {

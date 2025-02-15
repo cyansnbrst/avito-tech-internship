@@ -3,7 +3,10 @@ package server
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 
+	// swagger docs
+	_ "cyansnbrst/merch-service/docs"
 	authHTTP "cyansnbrst/merch-service/internal/auth/delivery/http"
 	authRepository "cyansnbrst/merch-service/internal/auth/repository"
 	authUseCase "cyansnbrst/merch-service/internal/auth/usecase"
@@ -17,6 +20,9 @@ import (
 // Register server handlers
 func (s *Server) RegisterHandlers() *echo.Echo {
 	e := echo.New()
+
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
 	e.Use(middleware.Recover())
 
 	e.Validator = validator.NewCustomValidator()

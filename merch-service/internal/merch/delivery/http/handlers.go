@@ -28,7 +28,16 @@ func NewMerchHandlers(merchUC merch.UseCase, logger *zap.Logger) merch.Handlers 
 	}
 }
 
-// Get user's info
+// @Summary		Get user's info
+// @Description	Get user's balance and transactions history.
+// @Tags		merch
+// @Produce		json
+// @Success		200	{object}	models.InfoResponse			"successful"
+// @Failure		400	{object}	httphelpers.ErrorResponse	"bad request"
+// @Failure		401	{object}	httphelpers.ErrorResponse	"authentication required"
+// @Failure		500	{object}	httphelpers.ErrorResponse	"internal server error"
+// @Security 	JWT
+// @Router		/info [get]
 func (h *merchHandlers) GetInfo(c echo.Context) error {
 	userID, err := middleware.ContextGetUserID(c)
 	if err != nil {
@@ -43,7 +52,18 @@ func (h *merchHandlers) GetInfo(c echo.Context) error {
 	return c.JSON(http.StatusOK, userInfo)
 }
 
-// Send coins
+// @Summary		Send coins
+// @Description	Send coins to another user
+// @Tags		merch
+// @Accept 		json
+// @Produce		json
+// @Param input body models.SendTransaction true "input"
+// @Success		200
+// @Failure		400	{object}	httphelpers.ErrorResponse	"bad request"
+// @Failure		401	{object}	httphelpers.ErrorResponse	"authentication required"
+// @Failure		500	{object}	httphelpers.ErrorResponse	"internal server error"
+// @Security 	JWT
+// @Router		/sendCoin [post]
 func (h *merchHandlers) SendCoins(c echo.Context) error {
 	userID, err := middleware.ContextGetUserID(c)
 	if err != nil {
@@ -70,7 +90,17 @@ func (h *merchHandlers) SendCoins(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-// Buy an item
+// @Summary		Buy item
+// @Description	Buy an item from the store
+// @Tags		merch
+// @Produce		json
+// @Param   	item  path  string  true  "name of the item to buy"
+// @Success		200
+// @Failure		400	{object}	httphelpers.ErrorResponse	"bad request"
+// @Failure		401	{object}	httphelpers.ErrorResponse	"authentication required"
+// @Failure		500	{object}	httphelpers.ErrorResponse	"internal server error"
+// @Security 	JWT
+// @Router		/buy/{item} [get]
 func (h *merchHandlers) BuyItem(c echo.Context) error {
 	userID, err := middleware.ContextGetUserID(c)
 	if err != nil {

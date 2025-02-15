@@ -11,6 +11,20 @@ import (
 	"cyansnbrst/merch-service/pkg/db/redis"
 )
 
+// @title 		Merch Store Service API
+// @version 	1.0
+// @description	API for perform transactions in a merch store.
+
+// @contact.name	Ekaterina Goncharova
+// @contact.email	yuuonx@mail.ru
+
+// @host 		localhost:8080
+// @BasePath	/api
+
+// @securityDefinitions.apikey	JWT
+// @in							header
+// @name						Authorization
+// @desctiprion					JWT Bearer token
 func main() {
 	log.Println("starting merch-service server")
 

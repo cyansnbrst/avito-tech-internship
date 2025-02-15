@@ -1,0 +1,215 @@
+basePath: /api
+definitions:
+  httphelpers.ErrorResponse:
+    properties:
+      errors:
+        type: string
+    type: object
+  models.AuthRequest:
+    properties:
+      password:
+        maxLength: 20
+        minLength: 4
+        type: string
+      username:
+        maxLength: 20
+        minLength: 4
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  models.AuthResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  models.InfoResponse:
+    properties:
+      coin_history:
+        $ref: '#/definitions/models.TransactionHistory'
+      coins:
+        type: integer
+      inventory:
+        items:
+          $ref: '#/definitions/models.InventoryItem'
+        type: array
+    type: object
+  models.InventoryItem:
+    properties:
+      quantity:
+        type: integer
+      type:
+        type: string
+    type: object
+  models.ReceiveTransaction:
+    properties:
+      amount:
+        type: integer
+      from_user:
+        type: string
+    type: object
+  models.SendTransaction:
+    properties:
+      amount:
+        minimum: 1
+        type: integer
+      to_user:
+        type: string
+    required:
+    - amount
+    - to_user
+    type: object
+  models.TransactionHistory:
+    properties:
+      received:
+        items:
+          $ref: '#/definitions/models.ReceiveTransaction'
+        type: array
+      sent:
+        items:
+          $ref: '#/definitions/models.SendTransaction'
+        type: array
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: yuuonx@mail.ru
+    name: Ekaterina Goncharova
+  description: API for perform transactions in a merch store.
+  title: Merch Store Service API
+  version: "1.0"
+paths:
+  /auth:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user if username doesn't exist or login if password
+        matches.
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: succesful
+          schema:
+            $ref: '#/definitions/models.AuthResponse'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/httphelpers.ErrorResponse'
+        "401":
+          description: invalid credentials
+          schema:
+            $ref: '#/definitions/httphelpers.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/httphelpers.ErrorResponse'
+      summary: Register or login a user
+      tags:
+      - auth
+  /buy/{item}:
+    get:
+      description: Buy an item from the store
+      parameters:
+      - description: name of the item to buy
+        in: path
+        name: item
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/httphelpers.ErrorResponse'
+        "401":
+          description: authentication required
+          schema:
+            $ref: '#/definitions/httphelpers.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/httphelpers.ErrorResponse'
+      security:
+      - JWT: []
+      summary: Buy item
+      tags:
+      - merch
+  /info:
+    get:
+      description: Get user's balance and transactions history.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: succesful
+          schema:
+            $ref: '#/definitions/models.InfoResponse'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/httphelpers.ErrorResponse'
+        "401":
+          description: authentication required
+          schema:
+            $ref: '#/definitions/httphelpers.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/httphelpers.ErrorResponse'
+      security:
+      - JWT: []
+      summary: Get user's info
+      tags:
+      - merch
+  /sendCoin:
+    post:
+      consumes:
+      - application/json
+      description: Send coins to another user
+      parameters:
+      - description: input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.SendTransaction'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/httphelpers.ErrorResponse'
+        "401":
+          description: authentication required
+          schema:
+            $ref: '#/definitions/httphelpers.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/httphelpers.ErrorResponse'
+      security:
+      - JWT: []
+      summary: Send coins
+      tags:
+      - merch
+securityDefinitions:
+  JWT:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

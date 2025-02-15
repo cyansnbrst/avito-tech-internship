@@ -81,6 +81,11 @@ gen:
 	mockgen -source=internal/merch/redis_repository.go -destination=internal/merch/mock/redis_repository_mock.go
 	mockgen -source=internal/auth/pg_repository.go -destination=internal/auth/mock/pg_repository_mock.go
 
+## swag: generates swagger documentation
+.PHONY: swag
+swag:
+	swag init -g cmd/api/main.go
+
 ## coverage: check tests coverage
 .PHONY: coverage
 coverage:
