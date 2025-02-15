@@ -40,7 +40,7 @@
 Результаты нагрузочного тестирования (vegeta):
 ![vegeta](merch-service/docs/vegeta-plot.png)
 ## Пример API-запросов
-Примеры запросов можно найти в файле `Recommendations-API.postman_collection.json`
+Примеры запросов можно найти в файле `Merch Store.postman_collection.json`
 
 Также доступна документация Swagger (после запуска сервиса): `http://localhost:8080/swagger/index.html`
 
